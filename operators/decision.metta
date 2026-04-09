@@ -12,7 +12,7 @@
 (= (get-goal $space $goal-name)
 (let*
    (
-    ($goal-vec  (fetch-goals $space))
+    ($goal-vec  (match $space (state $g $m $anti) $g))
     ($goal-list (cdr-atom $goal-vec))
     ($pair
     (case $goal-name
@@ -45,7 +45,9 @@
 (= (getGoal $space $goal-name)
    (get-goal $space $goal-name)
 )
-
+(= (getGoals $space)
+   (match $space (state $m $g $anti) (cdr-atom $g))
+)
 
 ; ─────────────────────────────────────────────
 ; update-goal – replace one goal's value.
@@ -53,29 +55,31 @@
 (= (update-goal $space $name $value)
     (let*
      (
-        ($current-modulator-vec (fetch-modulators $space))
-        ($current-goal (cdr-atom (fetch-goals $space)))
+        ($current-modulator-vec (match $space (state $turn $x $y $anti $alpha) $y))
+        ($current-goal (cdr-atom (match $space (state $turn $x $y $anti $alpha) $x)))
+        ($current-anti-goal (match $space (state $turn $x $y $anti $alpha) $anti))
+        
         ($update-goal  (case $name
         (
-            (efficiency           (replaceByIndex $current-goal 0  ($name $value)))
-            (accuracy             (replaceByIndex $current-goal 1  ($name $value)))
-            (success_moderate     (replaceByIndex $current-goal 2  ($name $value)))
-            (knowledge            (replaceByIndex $current-goal 3  ($name $value)))
-            (novelty              (replaceByIndex $current-goal 4  ($name $value)))
-            (success_breakthrough (replaceByIndex $current-goal 5  ($name $value)))
-            (coherence            (replaceByIndex $current-goal 6  ($name $value)))
-            (originality          (replaceByIndex $current-goal 7  ($name $value)))
-            (social               (replaceByIndex $current-goal 8  ($name $value)))
-            (help_short           (replaceByIndex $current-goal 9  ($name $value)))
-            (help_long            (replaceByIndex $current-goal 10 ($name $value)))
-            (over_beneficial      (replaceByIndex $current-goal 11 ($name $value)))
-            (over_safety          (replaceByIndex $current-goal 12 ($name $value)))
-            (over_honesty         (replaceByIndex $current-goal 13 ($name $value)))
+            (efficiency           (eval (replaceByIndex $current-goal 0  ($name $value))))
+            (accuracy             (eval (replaceByIndex $current-goal 1  ($name $value))))
+            (success_moderate     (eval (replaceByIndex $current-goal 2  ($name $value))))
+            (knowledge            (eval (replaceByIndex $current-goal 3  ($name $value))))
+            (novelty              (eval (replaceByIndex $current-goal 4  ($name $value))))
+            (success_breakthrough (eval (replaceByIndex $current-goal 5  ($name $value))))
+            (coherence            (eval (replaceByIndex $current-goal 6  ($name $value))))
+            (originality          (eval (replaceByIndex $current-goal 7  ($name $value))))
+            (social               (eval (replaceByIndex $current-goal 8  ($name $value))))
+            (help_short           (eval (replaceByIndex $current-goal 9  ($name $value))))
+            (help_long            (eval (replaceByIndex $current-goal 10 ($name $value))))
+            (over_beneficial      (eval (replaceByIndex $current-goal 11 ($name $value))))
+            (over_safety          (eval (replaceByIndex $current-goal 12 ($name $value))))
+            (over_honesty         (eval (replaceByIndex $current-goal 13 ($name $value))))
         )))
-        ($updated-state (state (cons goal-vector $update-goal) $current-modulator-vec))
+        ($updated-state (state (cons goal-vector $update-goal) $current-modulator-vec $current-anti-goal))
         ($_ (remove-state $space))
      )
-     (add-state $space $updated-state)
+     (add-atom $space $updated-state)
       )
 )
 
@@ -86,9 +90,12 @@
 (= (updateGoals $space $goals)
       (let* (
          ($mods     (getMods $space))
+         ($alpha  (match $space (state $turn $x $y $anti $alpha) $alpha))
+         ($anti  (match $space (state $turn $x $y $anti $alpha) $anti))
+         ($turn)
          ($_ (remove-state $space))
-         ($updated  (state (cons goal-vector $goals) $mods))
-         ($_ (add-state $space $updated))    ; ← $space was missing before
+         ($updated  (state $turn (cons goal-vector $goals) $mods $anti $alpha))
+         ($_ (add-atom $space $updated))    ; ← $space was missing before
          )
          (println! (goals update success 🎉))
    )
@@ -103,20 +110,21 @@
     (let*
       (
         ; ── context signals ──────────────────────────────
-        ($complexity       (getContext $space complexity))
-        ($failure_signal   (getContext $space failure_signal))
-        ($urg_ctx          (getContext $space urgent))
+        ($complexity       (eval (getContext $space complexity)))
+        ($failure_signal   (eval (getContext $space failure_signal)))
+        ($_ (println! ("failure_signal ctx" $failure_signal)))
+        ($urg_ctx          (eval (getContext $space urgent)))
 
         ; ── modulator values ─────────────────────────────
-        ($urgency          (getMod $space m_urgency))
-        ($resolution       (getMod $space m_resolution))
-        ($threshold        (getMod $space m_threshold))
-        ($securing         (getMod $space m_securing))
-        ($valence          (getMod $space m_valence))
+        ($urgency          (eval (getMod $space m_urgency)))
+        ($_ (println! ("urgency ctx" $urgency)))
+        ($resolution       (eval (getMod $space m_resolution)))
+        ($threshold        (eval (getMod $space m_threshold)))
+        ($securing         (eval (getMod $space m_securing)))
+        ($valence          (eval (getMod $space m_valence)))
 
         ; ── derived signal ───────────────────────────────
         ($low_confidence   (- 1.0 $threshold))
-
         ; ── current goal values ──────────────────────────
         ($efficiency_goal        (getGoal $space efficiency))
         ($accuracy_goal          (getGoal $space accuracy))
@@ -129,12 +137,11 @@
         ($social_goal            (getGoal $space social))
         ($help_short_goal        (getGoal $space help_short))
         ($help_long_goal         (getGoal $space help_long))
-        ($over_beneficial_goal   (getGoal $space over_beneficial))
+        ($over_beneficial_goal   (getGoal $space over_beneficial)) 
         ($over_safety_goal       (getGoal $space over_safety))
         ($over_honesty_goal      (getGoal $space over_honesty))
-
         ; ── valence helper  (map [-1,1] → [0,1]) ─────────
-        ($valence_norm     (_clamp01 (* (+ $valence 1.0) 0.5)))
+        ($valence_norm     (eval (_clamp01 (* (+ $valence 1.0) 0.5))))
 
         ; ── weighted goal calculations ─────────────────────
         ($efficiency_base  (* $efficiency_goal (- 1.0 (* 0.30 $complexity))))
@@ -217,12 +224,11 @@
                                (+ (* 0.45 $complexity)
                                   (+ (* 0.55 $threshold)
                                      (* 0.50 $securing))))))
-
+      
         ($honesty_w        (* $over_honesty_goal (+
                                0.60
                                (+ (* 0.60 $low_confidence)
                                   (* 0.30 $threshold)))))
-
         ; ── assemble ordered goal list ─────────────────────
         ($goalList (
             (efficiency          $efficiency)
@@ -240,8 +246,9 @@
             (over_safety         $safety_w)
             (over_honesty        $honesty_w)
         ))
+         ($_ (println! ("goal calculated 🎉" $goalList)))
       )
-      (updateGoals $space $goalList)
+      $goalList
     )
 )
 
@@ -732,7 +739,3 @@
         )
     )
 )
-
-
-; ── example usage ───────────────────────────────────────────
-; !(selectAction ((act_think 0.7) (act_search 0.72)) factual 0.35 0.44 0.03)

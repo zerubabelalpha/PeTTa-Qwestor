@@ -1,7 +1,7 @@
 import math
 import requests
 import json
-from typing import Any, Optional
+from typing import Any, Optional,Dict
 from dotenv import load_dotenv
 import re
 import os
@@ -365,3 +365,72 @@ def check():
 
 def trunc(number):
     return math.trunc(number * 100) / 100
+
+
+
+
+# def action_map_tranpiler(metta_text: str) -> dict:
+#     actions = {}
+
+#     # Match each (AG action_name ((...)))
+#     pattern = r'\(AG\s+(\w+)\s+\(\((.*?)\)\)\)'
+#     matches = re.findall(pattern, metta_text, re.DOTALL)
+
+#     for action_name, metrics_block in matches:
+#         metrics = {}
+
+#         # Extract (key value) pairs
+#         pairs = re.findall(r'\((\w+)\s+([0-9.]+)\)', metrics_block)
+
+#         for key, value in pairs:
+#             metrics[key] = float(value)
+
+#         actions[action_name] = metrics
+
+#     return  "ACTIONS = " + json.dumps(actions)
+
+
+
+def action_map_transpiler(metta_text: str) -> str:
+    metta_text = metta_text.strip()
+
+    # Detect if AG-style exists
+    if "(AG " in metta_text:
+        return transpile_ag_actions(metta_text)
+    else:
+        return transpile_flat_metrics(metta_text)
+
+
+# -------- CASE 2: AG BLOCK --------
+def transpile_ag_actions(metta_text: str) -> str:
+    actions = {}
+
+    pattern = r'\(AG\s+(\w+)\s+\(\((.*?)\)\)\)'
+    matches = re.findall(pattern, metta_text, re.DOTALL)
+
+    for action_name, metrics_block in matches:
+        metrics = {}
+
+        pairs = re.findall(r'\((\w+)\s+([0-9.]+)\)', metrics_block)
+
+        for key, value in pairs:
+            metrics[key] = float(value)
+
+        actions[action_name] = metrics
+
+    return "ACTIONS = " + json.dumps(actions, indent=2)
+
+
+# -------- CASE 1: FLAT METRICS --------
+def transpile_flat_metrics(metta_text: str) -> str:
+    metrics = {}
+
+    pairs = re.findall(r'\((\w+)\s+([0-9.]+)\)', metta_text)
+
+    for key, value in pairs:
+        metrics[key] = float(value)
+
+    return json.dumps(metrics, indent=2)
+
+py_text="""((efficiency 0.44772) (accuracy 0.6256599999999999) (success_moderate 1.02) (knowledge 0.41340000000000005) (novelty 0.3726) (success_breakthrough 0.37839999999999996) (coherence 0.5655) (originality 0.3504) (social 0.43210000000000004) (help_short 0.5142500000000001) (help_long 0.405) (over_beneficial 0.591) (over_safety 0.6174999999999999) (over_honesty 1.1099667))"""
+print(action_map_transpiler(py_text))

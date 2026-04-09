@@ -24,6 +24,9 @@
    )
 )
 
+(= (remove-state $space)
+ (let $state (match $space (state $x $y) (state $x $y)) (remove-atom $space $state))
+)
 
 ; ─────────────────────────────────────────────
 ; replaceByIndex
@@ -45,4 +48,31 @@
                 (let $c (replaceByIndex $tail (- $index 1) $new)
                     (cons-atom $first $c)
                 )))))
+
+
+(= (find_by_key $key $dic_list)
+(if (== $dic_list ())
+     ()
+        (let* (
+                (($pair $next) (decons $dic_list))
+                ($k (car-atom $pair))
+                ($v (cdr-atom $pair))
+            )
+            (if (== $k $key)
+                (superpose $v)
+                (find_by_key $key $next)
+            )
+        )
+
+)
+)
+
+
+(: add-reduct (-> %Undefined% Expression Bool))
+(= (add-reduct $space $f)
+   (let* (($headbody (cdr-atom $f))
+          ($head (car-atom $headbody))
+          ($body (cdr-atom $headbody))
+          ($bodyreduced (eval $body)))
+         (add-atom $space (= $head $bodyreduced))))
 
