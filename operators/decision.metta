@@ -12,7 +12,7 @@
 (= (get-goal $space $goal-name)
 (let*
    (
-    ($goal-vec  (match $space (state $g $m $anti) $g))
+    ($goal-vec  (match $space (state $turn $g $m $anti $alpha) $g))
     ($goal-list (cdr-atom $goal-vec))
     ($pair
     (case $goal-name
@@ -46,13 +46,13 @@
    (get-goal $space $goal-name)
 )
 (= (getGoals $space)
-   (match $space (state $m $g $anti) (cdr-atom $g))
+   (match $space (state $turn $g $m $anti $alpha) (cdr-atom $g))
 )
 
 ; ─────────────────────────────────────────────
-; update-goal – replace one goal's value.
+; updateGoal – replace one goal's value.
 ; ─────────────────────────────────────────────
-(= (update-goal $space $name $value)
+(= (updateGoal $space $name $value)
     (let*
      (
         ($current-modulator-vec (match $space (state $turn $x $y $anti $alpha) $y))
@@ -61,7 +61,7 @@
         ($current-goal (cdr-atom (match $space (state $turn $x $y $anti $alpha) $x)))
         ($current-anti-goal (match $space (state $turn $x $y $anti $alpha) $anti))
         
-        ($update-goal  (case $name
+        ($updateGoal  (case $name
         (
             (efficiency           (eval (replaceByIndex $current-goal 0  ($name $value))))
             (accuracy             (eval (replaceByIndex $current-goal 1  ($name $value))))
@@ -78,7 +78,7 @@
             (over_safety          (eval (replaceByIndex $current-goal 12 ($name $value))))
             (over_honesty         (eval (replaceByIndex $current-goal 13 ($name $value))))
         )))
-        ($updated-state (state $t (cons goal-vector $update-goal) $current-modulator-vec $current-anti-goal $alpha))
+        ($updated-state (state $t (cons goal-vector $updateGoal) $current-modulator-vec $current-anti-goal $alpha))
         ($_ (remove-state $space))
      )
      (add-atom $space $updated-state)
@@ -94,15 +94,14 @@
          ($mods     (getMods $space))
          ($alpha  (match $space (state $turn $x $y $anti $alpha) $alpha))
          ($anti  (match $space (state $turn $x $y $anti $alpha) $anti))
-         ($turn)
+         ($t   (match $space (state $turn $x $y $anti $alpha) $turn))
          ($_ (remove-state $space))
-         ($updated  (state $turn (cons goal-vector $goals) $mods $anti $alpha))
+         ($updated  (state $t (cons goal-vector $goals) $mods $anti $alpha))
          ($_ (add-atom $space $updated))    ; ← $space was missing before
          )
          (println! (goals update success 🎉))
    )
 )
-
 
 ; ─────────────────────────────────────────────
 ; goalWeight – compute weighted goal values
@@ -129,6 +128,7 @@
         ($low_confidence   (- 1.0 $threshold))
         ; ── current goal values ──────────────────────────
         ($efficiency_goal        (getGoal $space efficiency))
+        ($_ (println! ("efficiency goal" $efficiency_goal)))
         ($accuracy_goal          (getGoal $space accuracy))
         ($success_moderate_goal  (getGoal $space success_moderate))
         ($knowledge_goal         (getGoal $space knowledge))

@@ -12,11 +12,11 @@
 ; Space-parameterised accessors
 ; ─────────────────────────────────────────────
 (= (getMods $space)  (match $space (state (turn $turn) $x $y $z $alpha) $y))
-(= (get-goals $space)(match $space (state  (turn $turn) $x $y $z $aplha) $x))
-(= (get_state $space)(match $space (state (turn $turn)  $x $y $z $alpha) (state (turn $turn )  $x $y $z $alpha)))
+(= (getGoals $space)(match $space (state  (turn $turn) $x $y $z $aplha) $x))
+(= (getState $space)(match $space (state (turn $turn)  $x $y $z $alpha) (state (turn $turn ) $x $y $z $alpha)))
 
 (= (remove-state $space)
- (let $state (get_state $space) (remove-atom $space $state))
+ (let $state (getState $space) (remove-atom $space $state))
 )
 
 ; Retrieve the value of a single modulator by name.
@@ -93,7 +93,7 @@
 ; ─────────────────────────────────────────────
 (= (update-mods $space $mods)
       (let* (
-         ($goal     (get-goals $space))
+         ($goal     (getGoals $space))
          ($t   (match $space (state $turn  $x $y $z $alpha) $turn))
          ($alpha    (match $space (state $turn  $x $y $z $alpha) $alpha))
          ($anti  (match $space (state $turn  $x $y $z $alpha) $z))
@@ -329,7 +329,7 @@
                         (cx $cx)
                         (ambiguity $amb)
                         (expertise $exp)
-                        (threshold_signal $thr)
+                        (threshold_signal $thrl)
                         (familiarity_signal $fam)
                         (failure_signal $fs)
                         (urgent_flag $urg)
@@ -356,11 +356,9 @@
 
 
       ; ── return the full updated modulator-vector ──────────
-
-     (
+ 
         $results 
       
-     )
       
 
   

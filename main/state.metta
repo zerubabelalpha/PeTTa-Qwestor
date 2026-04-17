@@ -73,7 +73,7 @@
 (= (update-modulator $space $name $value)
     (let*
      (
-        ($current-goal-vec (get-goals $space))
+        ($current-goal-vec (getGoals $space))
         ($current-modulator (cdr-atom (get-mods $space)))
         ($update-modulator  (case $name 
         ( 

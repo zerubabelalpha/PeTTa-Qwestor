@@ -3,7 +3,7 @@
 ; !(_clamp01 (+ (* (- 1.0 (get-alpha resolution_alpha)) (getMod m_resolution)) (* (getAlpha resolution_alpha) (getContext complexity))))
 ; !(getMods &sp)
 ; !(update-modulator &sp m_resolution 0.9)
-; !(update-goal &sp energy 0.8)
+; !(updateGoal &sp energy 0.8)
 ; !(get_state &sp)
 ; !(update-mods &sp ((m_urgency 0.0) (m_resolution 0.9) (m_user_expertise 0.5) (m_threshold 0.3) (m_topic_familiarity 0.5) (m_failure_wariness 0.1) (m_securing 0.1) (m_approach 0.4) (m_arousal 0.4) (m_risk_aversion 0.4) (m_error_tolerance 0.45) (m_creativity 0.45) (m_valence 0)))
 ; !(get_state &sp)

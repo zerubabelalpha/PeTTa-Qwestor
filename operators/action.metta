@@ -154,7 +154,7 @@
    ($ACTIONS (match $space (AG $action_list $effects) (AG $action_list $effects)))
    ($anti_goal (getAntiGoals $space))
    ($cxt_n_alpha (match $space ($x $y) ($x $y)))
-   ($goal (getGoal $space))
+   ($goal (getGoals $space))
    ($goalweight (goalWeight $space))
 
    ($cx (find_by_key cx $appraisal_list))
