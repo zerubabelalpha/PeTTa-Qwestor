@@ -45,9 +45,7 @@
 (= (getGoal $space $goal-name)
    (get-goal $space $goal-name)
 )
-(= (getGoals $space)
-   (match $space (state $turn $g $m $anti $alpha) (cdr-atom $g))
-)
+(= (getGoals $space)(match $space (state  (turn $turn) $x $y $z $aplha) $x))
 
 ; ─────────────────────────────────────────────
 ; updateGoal – replace one goal's value.

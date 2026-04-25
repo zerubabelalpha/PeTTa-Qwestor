@@ -12,7 +12,6 @@
 ; Space-parameterised accessors
 ; ─────────────────────────────────────────────
 (= (getMods $space)  (match $space (state (turn $turn) $x $y $z $alpha) $y))
-(= (getGoals $space)(match $space (state  (turn $turn) $x $y $z $aplha) $x))
 (= (getState $space)(match $space (state (turn $turn)  $x $y $z $alpha) (state (turn $turn ) $x $y $z $alpha)))
 
 (= (remove-state $space)
@@ -308,7 +307,7 @@
             $coldWeight) (getContext $space valence))))))
         ($_ (println! ("Calculated effective signals: u: " $u " res: " $res " ux: " $ux " threshold: " $threshold " securing: " $securing " approach: " $approach " arousal: " $arousal " risk_aversion: " $risk_aversion " error_tolerance: " $error_tolerance " creativity: " $creativity " valence: " $valence)))
 
-        ($updatedMods (modulator-vector
+        ($updatedMods (
         (m_urgency           $m_urgency)
         (m_resolution        $m_resolution)
         (m_user_expertise    $m_user_expertise)
