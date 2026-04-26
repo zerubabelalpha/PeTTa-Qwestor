@@ -1,5 +1,10 @@
 
 # penality functions for anti-goals
+from main.context import _clamp01
+import re
+import json
+
+
 def _hallucination_penalty(action: str, cx: float, ambiguity: float) -> float:
     base = {
         "act_respond": 0.90,
