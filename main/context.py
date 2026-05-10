@@ -6,19 +6,12 @@ from dotenv import load_dotenv
 import re
 import os
 
-def _clamp01(value: float) -> float:
-    if value < 0.0:
-        return 0.0
-    if value > 1.0:
-        return 1.0
-    return value
+def _clamp01(x: float) -> float:
+    return max(0.0, min(1.0, x))
 
-def _clamp11(value: float) -> float:
-    if value < -1.0:
-        return -1.0
-    if value > 1.0:
-        return 1.0
-    return value
+def _clamp11(x: float) -> float:
+    return max(-1.0, min(1.0, x))
+
 
 def _coerce_bool(value: Any) -> Optional[bool]:
     if isinstance(value, bool):
@@ -90,7 +83,7 @@ def _calibrate_action_signals(
 def parse_with_openrouter(
     query: str, 
     api_key: str, 
-    model: str = "google/gemini-2.0-flash-exp:free"
+    model: str = "openai/gpt-4o-mini"
 ) -> dict[str, Any] | None:
     """
     Parse a user query using OpenRouter API.
@@ -268,14 +261,16 @@ def wrap_parser(query):
     Boolean values are converted to integers 0 or 1.
     """
     load_dotenv()
-    api_key = os.getenv("API_KEY")
-    model_name = os.getenv("MODEL_NAME", "google/gemini-2.0-flash-exp:free")
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    model_name = "openai/gpt-4o-mini"
     
     # Get the parsed result (dictionary)
     result_dict = parse_with_openrouter(query, api_key, model=model_name)
     
     if result_dict is None:
-        return []  # Return empty list if parsing failed
+        print("⚠️ Using fallback context")
+        raise RuntimeError("LLM parsing failed - no context generated")
+        # return []  # Return empty list if parsing failed
     
     # Define the order you want
     ordered_keys = [
@@ -313,9 +308,9 @@ def wrap_parser(query):
 # Example usage
 if __name__ == "__main__":
     load_dotenv()
-    api_key = os.getenv("API_KEY")  # Make sure this env var is set correctly
-    model_name = os.getenv("MODEL_NAME", "google/gemini-2.0-flash-exp:free")
-    
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    model_name = "openai/gpt-4o-mini"
+
     print(f"Using API key: {api_key[:5]}...{api_key[-5:] if api_key else 'None'}")
     print(f"Using model: {model_name}")
     
@@ -391,5 +386,5 @@ def trunc(number):
 
 
 
-py_text="""((efficiency 0.44772) (accuracy 0.6256599999999999) (success_moderate 1.02) (knowledge 0.41340000000000005) (novelty 0.3726) (success_breakthrough 0.37839999999999996) (coherence 0.5655) (originality 0.3504) (social 0.43210000000000004) (help_short 0.5142500000000001) (help_long 0.405) (over_beneficial 0.591) (over_safety 0.6174999999999999) (over_honesty 1.1099667))"""
-print(action_map_transpiler(py_text))
+# py_text="""((efficiency 0.44772) (accuracy 0.6256599999999999) (success_moderate 1.02) (knowledge 0.41340000000000005) (novelty 0.3726) (success_breakthrough 0.37839999999999996) (coherence 0.5655) (originality 0.3504) (social 0.43210000000000004) (help_short 0.5142500000000001) (help_long 0.405) (over_beneficial 0.591) (over_safety 0.6174999999999999) (over_honesty 1.1099667))"""
+# print(action_map_transpiler(py_text))

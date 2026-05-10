@@ -86,7 +86,7 @@
      (updateGoal $space $name $new)
    )
 )
-(= (antiGoal-get $anti $name)
+(= (antiGoalGet $anti $name)
    (let*
      (
        ($list (cdr-atom $anti))
@@ -101,7 +101,7 @@
      )
    )
 )
-(= (updateAntiGoals $space $hall $red $rh $prem)
+(= (updateAnti-Goals $space $hall $red $rh $prem)
    (let*
      (
        ($t     (match $space (state $turn $x $y $anti $alpha) $turn))
@@ -124,21 +124,21 @@
    (let*
      (
        ($anti   (getAntiGoals $space))
-       ($cur    (antiGoal-get $anti $name))
+       ($cur    (antiGoalGet $anti $name))
        ($center (default-center $name))
        ($new    (_contract-value $cur $lo $hi $eta $alpha-near $center))
-       ($hall   (antiGoal-get $anti hallucinate))
-       ($red    (antiGoal-get $anti redundant))
-       ($rh     (antiGoal-get $anti rabbit_hole))
-       ($prem   (antiGoal-get $anti premature))
+       ($hall   (antiGoalGet $anti hallucinate))
+       ($red    (antiGoalGet $anti redundant))
+       ($rh     (antiGoalGet $anti rabbit_hole))
+       ($prem   (antiGoalGet $anti premature))
      )
 
      (case $name
        (
-         (hallucinate (updateAntiGoals $space $new  $red  $rh   $prem))
-         (redundant   (updateAntiGoals $space $hall $new  $rh   $prem))
-         (rabbit_hole (updateAntiGoals $space $hall $red  $new  $prem))
-         (premature   (updateAntiGoals $space $hall $red  $rh   $new))
+         (hallucinate (updateAnti-Goals $space $new  $red  $rh   $prem))
+         (redundant   (updateAnti-Goals $space $hall $new  $rh   $prem))
+         (rabbit_hole (updateAnti-Goals $space $hall $red  $new  $prem))
+         (premature   (updateAnti-Goals $space $hall $red  $rh   $new))
        )
      )
    )
