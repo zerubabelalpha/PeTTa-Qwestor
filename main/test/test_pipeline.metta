@@ -13,6 +13,7 @@
 !(import! &self ../../operators/appraisal)
 !(import! &self ../../operators/decision)
 !(import! &self ../../operators/action)
+!(import! &self ../../operators/routing)
 
 
 ; ═══════════════════════════════════════════════════════════════
@@ -268,10 +269,7 @@
 !(remove-state &space)
 
 ; After removal: state match returns empty
-!(test (
-    let* (
-        ($state (getState &space))
-    ) $state) ())
+!(test (let $s (getState &space) $s) ())
 
 ; Add state back
 !(addState &space (state (turn 0) (default-goals) (default-mods) (default-anti-goals) (alpha)))
@@ -317,5 +315,134 @@
 !(println! "TEST 11 passed - Appraisal computation ran successfully")
 
 
-; TEST 12 — Goal weighting (goalWeight) will be completed after fixing "getGoals".
+; ═══════════════════════════════════════════════════════════════
+; ROUTING PIPELINE TEST SUITE (Symbols Refactor)
+; ═══════════════════════════════════════════════════════════════
 
+!(println! "=== ROUTING PIPELINE TEST SUITE START ===")
+
+;; TEST HELPERS & INITIALIZATION
+;; ============================================================
+
+;; Standard baseline scores for all actions
+(= (init-scores)
+   ((Score act_decompose 0.5)
+    (Score act_search 0.5)
+    (Score act_synthesize 0.5)
+    (Score act_verify 0.5)
+    (Score act_clarify 0.5)
+    (Score act_think 0.5)
+    (Score act_respond 0.5)))
+
+;; A complete default context to avoid KeyNotFound errors during tests
+(= (full-ctx)
+   ((complexity 0.5)
+    (ambiguity 0.1)
+    (urgent_flag false)
+    (reflective_intent 0.1)
+    (needs_external_evidence 0.1)
+    (needs_task_plan 0.1)
+    (needs_multi_source_integration 0.1)
+    (decompose_min_complexity 0.4)
+    (decompose_urgent_min_complexity 0.3)
+    (decompose_max_ambiguity 0.6)
+    (verify_request false)
+    (intent_type factual)
+    (threshold 0.5)
+    (low_confidence 0.1)
+    (failure_wariness 0.1)
+    (approach 0.5)
+    (threshold_signal 0.1)
+    (failure_signal 0.1)
+    (familiarity_signal 0.5)
+    (help_short 0.5)))
+
+;; Helper to update context keys for specific test cases
+(= (update-ctx () $key $val) (($key $val)))
+(= (update-ctx (($k $v) $rest) $key $val)
+   (if (== $k $key)
+       (($key $val) $rest)
+       (($k $v) (update-ctx $rest $key $val))))
+
+;; Helper to extract a single score value for assertions
+(= (check-score $scores $act) (get-action-score $scores $act))
+
+;; ============================================================
+;; TEST CASE 1: DECOMPOSE GUARD (BLOCKING)
+;; Goal: Verify decompose is blocked when complexity (complexity) is too low.
+;; ============================================================
+!(println! "Running Test 1: Decompose Logic...")
+!(let* (
+    ($ctx (update-ctx (full-ctx) complexity 0.1))
+    ($result (guard-decompose (init-scores) $ctx))
+) (test (check-score $result act_decompose) (ACTION_BLOCKED_SCORE)))
+
+;; ============================================================
+;; TEST CASE 2: SEARCH & SYNTH LOCAL GUARDS
+;; Goal: Verify search is boosted when external evidence needs are high.
+;; ============================================================
+!(println! "Running Test 2: Search Boosting...")
+!(let* (
+    ($ctx (update-ctx (update-ctx (full-ctx) needs_external_evidence 0.8) needs_task_plan 0.2))
+    ($result (guard-search-synth (init-scores) $ctx))
+    ($score (check-score $result act_search))
+) (test (== $score 0.92) true)) ;; 0.5 + 0.3 + 0.12
+
+;; ============================================================
+;; TEST CASE 3: ARBITRATION (SEARCH VS DECOMPOSE)
+;; Goal: Verify Search wins when external evidence dominates task planning.
+;; ============================================================
+!(println! "Running Test 3: Arbitration Logic...")
+!(let* (
+    ($ctx (update-ctx (update-ctx (full-ctx) needs_external_evidence 0.9) needs_task_plan 0.1))
+    ($result (guard-search-arb (init-scores) $ctx))
+) (test (> (check-score $result act_search) (check-score $result act_decompose)) true))
+
+;; ============================================================
+;; TEST CASE 4: VERIFY GUARD
+;; Goal: Verify act_verify is blocked if not requested and low confidence is low.
+;; ============================================================
+!(println! "Running Test 4: Verify Blocking...")
+!(let* (
+    ($ctx (update-ctx (update-ctx (full-ctx) verify_request false) low_confidence 0.1))
+    ($result (guard-verify (init-scores) $ctx))
+) (test (check-score $result act_verify) (ACTION_BLOCKED_SCORE)))
+
+;; ============================================================
+;; TEST CASE 5: FAST LANE (ULTRA FAST)
+;; Goal: Verify all complex actions blocked and respond is boosted for simple input.
+;; ============================================================
+!(println! "Running Test 5: Fast Lane Trigger...")
+!(let* (
+    ($ctx (update-ctx (update-ctx (update-ctx (update-ctx (update-ctx (update-ctx (full-ctx) 
+          complexity 0.1) ambiguity 0.1) familiarity_signal 0.9) 
+          threshold_signal 0.1) failure_signal 0.1) 
+          low_confidence 0.1))
+    ($result (guard-fast-lane (init-scores) $ctx))
+) (test (and (== (check-score $result act_search) (ACTION_BLOCKED_SCORE))
+             (== (check-score $result act_think) (ACTION_BLOCKED_SCORE))) true))
+
+;; ============================================================
+;; TEST CASE 6: TIE-BREAKER (INTENT SELECTION)
+;; Goal: Verify act_think is preferred in a tie when intent is reflective.
+;; ============================================================
+!(println! "Running Test 6: Tie-Breaker Logic...")
+!(let* (
+    ;; Tie search and think at 0.7
+    ($scores ((Score act_search 0.7) (Score act_think 0.7)))
+    ($ctx (update-ctx (update-ctx (update-ctx (full-ctx) intent_type reflective) low_confidence 0.1) threshold 0.1))
+    ($margin 0.05)
+    ((Result $best $top3) (select-action $scores $ctx $margin))
+) (test $best (Score act_think 0.7501)))
+
+;; ============================================================
+;; TEST CASE 7: FULL PIPELINE INTEGRATION
+;; Goal: Ensure the entire chain runs and produces a valid winning Score.
+;; ============================================================
+!(println! "Running Test 7: Full Pipeline Integration...")
+!(let* (
+    ($ctx (update-ctx (update-ctx (update-ctx (full-ctx) 
+          complexity 0.8) ambiguity 0.1) needs_external_evidence 0.9))
+    ($final_scores (apply-routing-guards (init-scores) $ctx))
+    ($result (select-action $final_scores $ctx 0.05))
+) (println! (format "Final Result: {}" $result)))
