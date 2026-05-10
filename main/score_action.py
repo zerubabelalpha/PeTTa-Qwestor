@@ -1,6 +1,5 @@
 
 # penality functions for anti-goals
-from main.context import _clamp01
 import re
 import json
 

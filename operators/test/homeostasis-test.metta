@@ -134,15 +134,15 @@
 !(let*
    (
      ($anti (getAntiGoals &testSpaceAnti))
-     ($hall (antiGoal-get $anti hallucinate))
-     ($red  (antiGoal-get $anti redundant))
-     ($rh   (antiGoal-get $anti rabbit_hole))
-     ($prem (antiGoal-get $anti premature))
+     ($hall (antiGoalGet$anti hallucinate))
+     ($red  (antiGoalGet$anti redundant))
+     ($rh   (antiGoalGet$anti rabbit_hole))
+     ($prem (antiGoalGet$anti premature))
    )
-   (updateAntiGoals &testSpaceAnti 0.02 $red $rh $prem)
+   ( updateAnti-Goals &testSpaceAnti 0.02 $red $rh $prem)
 )
 !(homeo-contract-anti &testSpaceAnti hallucinate 0.0 1.0 0.05 0.10)
-!(test (antiGoal-get (getAntiGoals &testSpaceAnti) hallucinate) 
+!(test (antiGoalGet(getAntiGoals &testSpaceAnti) hallucinate) 
        0.053)
 
 ; apply-homeostasis
@@ -221,10 +221,10 @@
     0.6000000000000001)
 ; testing anti-goals through the main function 
 
-!(updateAntiGoals &testApplyHomeostasis 0.01 0.3 0.3 0.3)
+!(updateAnti-Goals &testApplyHomeostasis 0.01 0.3 0.3 0.3)
 !(apply-homeostasis &testApplyHomeostasis)
 !(test
-  (antiGoal-get (getAntiGoals &testApplyHomeostasis) hallucinate)
+  (antiGoalGet(getAntiGoals &testApplyHomeostasis) hallucinate)
   0.044)
 
 ; boundary test

@@ -1,5 +1,4 @@
-!(import! &self appraisal)
-!(import! &self "../main/score_action.py")
+
 (= (Actions $space)
  ((AG act_respond (
         (efficiency 1.00)
