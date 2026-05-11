@@ -84,3 +84,33 @@
 (= (_blend $prev $target $alpha)
    (eval (_clamp01 (+ (* (- 1.0 $alpha) $prev)
                       (* $alpha $target)))))
+
+
+; ─────────────────────────────────────────────
+; Context clearing helpers
+; ─────────────────────────────────────────────
+
+(= (clear-keys $space $keys)
+   (if (== $keys ())
+       ()
+       (let* (
+          ($k (car-atom $keys))
+          ($tail (cdr-atom $keys))
+          ($_ (collapse (match $space ($k $v) (remove-atom $space ($k $v)))))
+       ) (clear-keys $space $tail) )
+   )
+)
+
+(= (clear-context $space)
+   (clear-keys $space (complexity threshold ambiguity urgent intent_type expertise topic_familiarity failure_signal verify_request reflective_intent needs_external_evidence needs_task_plan needs_multi_source_integration valence))
+)
+
+
+(= (increment-turn $space)
+   (let* (
+           ($cur (match $space (state (turn $t) $g $m $a) $t))
+           ($new-state (state (+ $cur 1) $g $m $a))
+         )
+         (remove-state $space)
+         (add-state $space $new-state))
+)
