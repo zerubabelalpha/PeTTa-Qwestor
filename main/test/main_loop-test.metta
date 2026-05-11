@@ -51,6 +51,7 @@
 !(println! "--- Step 3: goalWeight ---")
 !(println! ("  weighted goals:" (goalWeight &space)))
 !(println! "Turn 0 complete.")
+!(increment-turn &space)
 
 ; =================================
 ; TURN 1 — Urgent, simple follow-up
