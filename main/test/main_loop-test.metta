@@ -52,9 +52,9 @@
 !(println! ("  weighted goals:" (goalWeight &space)))
 !(println! "Turn 0 complete.")
 
-;==================================
+; =================================
 ; TURN 1 — Urgent, simple follow-up
-;==================================
+; =================================
 !(println! "")
 !(println! "=== TURN 1: Urgent simple query ===")
 
